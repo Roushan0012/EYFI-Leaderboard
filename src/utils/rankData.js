@@ -1,43 +1,32 @@
 /**
- * Filters and ranks participants based on active tab, search term, and category filter
- * @param {Array} participants - List of raw participants
+ * Pure function to sort and rank participants by a given sortKey ('week' or 'total')
+ * @param {Array} participants - Raw participant array
  * @param {Object} options
- * @param {'weekly' | 'all30'} options.tab - Active timeframe tab
- * @param {string} options.search - Search query for participant name or college
- * @param {string} options.category - Category filter ('All' or specific hustle category)
- * @returns {Array} Sorted and ranked list with computed rank property
+ * @param {'week' | 'total'} [options.sortKey='week'] - Sort metric
+ * @returns {Array} New sorted array with rank and currentEarnings properties
  */
-export function rankData(participants = [], { tab = 'weekly', search = '', category = 'All' } = {}) {
-  // Sort field depends on active timeframe tab
-  const earningsKey = tab === 'all30' ? 'totalEarnings' : 'weeklyEarnings'
+export function getRankedParticipants(participants = [], { sortKey = 'week' } = {}) {
+  if (!Array.isArray(participants)) return []
 
-  // Filter participants
-  const filtered = participants.filter((p) => {
-    const matchesSearch =
-      !search ||
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.college.toLowerCase().includes(search.toLowerCase()) ||
-      p.handle.toLowerCase().includes(search.toLowerCase())
+  const key = sortKey === 'total' ? 'totalEarnings' : 'weeklyEarnings'
+  const fallbackKey = sortKey === 'total' ? 'total' : 'week'
 
-    const matchesCategory =
-      !category || category === 'All' || p.category.toLowerCase() === category.toLowerCase()
-
-    return matchesSearch && matchesCategory
-  })
-
-  // Sort descending by current earnings key (tiebreaker: streakDays)
-  filtered.sort((a, b) => {
-    if (b[earningsKey] !== a[earningsKey]) {
-      return b[earningsKey] - a[earningsKey]
+  // Shallow copy to prevent mutating the original array
+  const sorted = [...participants].sort((a, b) => {
+    const valA = a[key] ?? a[fallbackKey] ?? 0
+    const valB = b[key] ?? b[fallbackKey] ?? 0
+    if (valB !== valA) {
+      return valB - valA
     }
-    return b.streakDays - a.streakDays
+    // Tiebreaker: streakDays or id
+    return (b.streakDays || 0) - (a.streakDays || 0)
   })
 
-  // Assign 1-indexed rank
-  return filtered.map((participant, index) => ({
-    ...participant,
+  // Return mapped with rank and normalized currentEarnings
+  return sorted.map((p, index) => ({
+    ...p,
     rank: index + 1,
-    currentEarnings: participant[earningsKey],
+    currentEarnings: p[key] ?? p[fallbackKey] ?? 0,
   }))
 }
 
@@ -46,8 +35,8 @@ export function rankData(participants = [], { tab = 'weekly', search = '', categ
  * @param {Array} participants 
  */
 export function getChallengeStats(participants = []) {
-  const totalEarned = participants.reduce((sum, p) => sum + (p.totalEarnings || 0), 0)
-  const totalWeekly = participants.reduce((sum, p) => sum + (p.weeklyEarnings || 0), 0)
+  const totalEarned = participants.reduce((sum, p) => sum + (p.totalEarnings || p.total || 0), 0)
+  const totalWeekly = participants.reduce((sum, p) => sum + (p.weeklyEarnings || p.week || 0), 0)
   const activeCount = participants.length
 
   return {

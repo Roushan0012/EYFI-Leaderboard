@@ -1,129 +1,112 @@
-import React, { useState } from 'react'
-import { Flame, ChevronDown, ChevronUp, Sparkles, Building2, Briefcase } from 'lucide-react'
+import React from 'react'
+import { Flame, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react'
 import { formatCurrency } from '../utils/formatCurrency'
+import { getInitials, getAvatarColor } from '../utils/avatarHelper'
 
 /**
- * LeaderboardRow Component - expandable participant row
+ * LeaderboardRow Component for rank 4 and below
+ * Displays: Rank number, initials avatar with hash color, name + YOU badge,
+ * college + category + streak (only if streak >= 5), earnings, and trend indicator.
  */
-export default function LeaderboardRow({ participant, rank }) {
-  const [expanded, setExpanded] = useState(false)
-
+export default function LeaderboardRow({
+  participant,
+  rank,
+  onClick = () => {}
+}) {
   if (!participant) return null
 
-  const isMe = participant.isMe
+  const isMe = Boolean(participant.isMe)
+  const currentRank = rank || participant.rank
+  const earnings = participant.currentEarnings ?? participant.weeklyEarnings ?? participant.week
+  const streak = participant.streakDays ?? participant.streak ?? 0
+
+  // Deterministic trend indicator
+  const isRising = (currentRank % 3 === 1) || streak >= 10
+  const isFalling = currentRank % 4 === 0 && !isRising
+
+  const avatarColor = getAvatarColor(participant.name)
 
   return (
     <div
-      className={`border rounded-card transition-all duration-200 overflow-hidden ${
+      onClick={onClick}
+      className={`group w-full flex items-center justify-between p-3 sm:p-4 rounded-card border transition-all duration-150 cursor-pointer select-none ${
         isMe
-          ? 'bg-surface-alt border-accent/60 shadow-sm shadow-accent/5'
-          : 'bg-surface-card border-border hover:border-border/80'
+          ? 'bg-surface-alt border-accent shadow-[0_0_15px_rgba(207,255,61,0.08)]'
+          : 'bg-surface-card border-border hover:border-border/80 hover:bg-surface-alt/50'
       }`}
     >
-      {/* Row Header - Click to toggle expand */}
-      <div
-        onClick={() => setExpanded(!expanded)}
-        className="flex items-center justify-between p-3 sm:p-4 cursor-pointer gap-2 select-none"
-      >
-        {/* Left: Rank & Avatar & Details */}
-        <div className="flex items-center gap-3 min-w-0">
-          {/* Rank Badge */}
-          <div className="w-7 text-center font-black text-sm text-text-muted shrink-0">
-            #{rank || participant.rank}
-          </div>
+      {/* Left Section: Rank + Avatar + Identity Info */}
+      <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
+        {/* Rank Number */}
+        <span className="w-6 sm:w-7 text-center font-black text-xs sm:text-sm text-text-muted shrink-0">
+          #{currentRank}
+        </span>
 
-          {/* Avatar */}
-          <div className="relative shrink-0">
-            <div className="w-10 h-10 rounded-full overflow-hidden border border-border bg-surface-alt">
-              <img
-                src={participant.avatar}
-                alt={participant.name}
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
-            </div>
+        {/* Initials Avatar with Name Hash Color */}
+        <div
+          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm shrink-0 border ${avatarColor.bg} ${avatarColor.text} ${avatarColor.border}`}
+        >
+          {getInitials(participant.name)}
+        </div>
+
+        {/* Name, YOU Badge, College, Category, Streak */}
+        <div className="min-w-0 flex-1 pr-2">
+          <div className="flex items-center gap-1.5">
+            <span className="font-bold text-xs sm:text-sm text-text-primary truncate">
+              {participant.name}
+            </span>
             {isMe && (
-              <span className="absolute -bottom-1 -right-1 bg-accent text-black font-extrabold text-[9px] px-1 py-0.2 rounded-full border border-black">
+              <span className="inline-flex items-center text-[9px] sm:text-[10px] font-extrabold uppercase bg-accent text-black px-1.5 py-0.5 rounded-full shrink-0 tracking-wider">
                 YOU
               </span>
             )}
           </div>
 
-          {/* Name & College */}
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="font-bold text-sm text-text-primary truncate">
-                {participant.name}
-              </span>
-              {isMe && (
-                <span className="hidden xs:inline-block text-[10px] font-bold text-accent bg-accent/15 px-1.5 py-0.2 rounded">
-                  You
+          <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-text-muted mt-0.5">
+            <span className="truncate max-w-[100px] xs:max-w-[130px] sm:max-w-[180px]">
+              {participant.college}
+            </span>
+            <span className="w-1 h-1 rounded-full bg-border shrink-0"></span>
+            <span className="text-[10px] sm:text-[11px] font-medium text-text-muted shrink-0">
+              {participant.category}
+            </span>
+
+            {/* Streak Badge (Only displayed if streak >= 5) */}
+            {streak >= 5 && (
+              <>
+                <span className="w-1 h-1 rounded-full bg-border shrink-0 hidden xs:inline-block"></span>
+                <span className="inline-flex items-center gap-0.5 text-amber-400 font-bold text-[10px] sm:text-[11px] shrink-0">
+                  <Flame className="w-3 h-3 fill-amber-400 text-amber-400 shrink-0" />
+                  <span>{streak}d</span>
                 </span>
-              )}
-            </div>
-            <div className="flex items-center gap-2 text-xs text-text-muted">
-              <span className="truncate max-w-[120px] sm:max-w-[200px]">{participant.college}</span>
-              <span className="w-1 h-1 rounded-full bg-border shrink-0"></span>
-              <span className="text-[11px] font-medium text-accent/90">{participant.category}</span>
-            </div>
+              </>
+            )}
           </div>
-        </div>
-
-        {/* Right: Earnings & Streak & Chevron */}
-        <div className="flex items-center gap-3 shrink-0">
-          {/* Streak pill */}
-          {participant.streakDays > 0 && (
-            <div className="hidden sm:flex items-center gap-1 bg-surface-alt px-2 py-1 rounded-full border border-border text-[11px] text-amber-300 font-semibold">
-              <Flame className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-              <span>{participant.streakDays}d</span>
-            </div>
-          )}
-
-          {/* Earnings Amount */}
-          <div className="text-right">
-            <div className="font-black text-sm sm:text-base text-text-primary">
-              {formatCurrency(participant.currentEarnings || participant.weeklyEarnings)}
-            </div>
-            <div className="text-[10px] text-text-muted">
-              {participant.streakDays > 0 ? `${participant.streakDays}d streak` : '0d streak'}
-            </div>
-          </div>
-
-          {/* Toggle icon */}
-          <button className="text-text-muted hover:text-text-primary p-1">
-            {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
         </div>
       </div>
 
-      {/* Expandable Breakdown Drawer */}
-      {expanded && (
-        <div className="px-4 pb-4 pt-2 border-t border-border/60 bg-surface-alt/40 text-xs space-y-2.5 animate-fadeIn">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5 text-text-muted">
-              <Briefcase className="w-3.5 h-3.5 text-accent" />
-              <span className="font-medium text-text-primary">Hustle Project:</span>
-              <span className="text-text-primary/90 font-medium">{participant.hustle}</span>
-            </div>
-            <div className="text-text-muted">
-              Total 30-Day Earnings:{' '}
-              <span className="font-bold text-accent">{formatCurrency(participant.totalEarnings)}</span>
-            </div>
+      {/* Right Section: Earnings + Trend Indicator */}
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0 pl-1 text-right">
+        <div>
+          <div className="font-black text-xs sm:text-sm text-text-primary tracking-tight">
+            {formatCurrency(earnings)}
           </div>
-
-          <div className="flex items-center justify-between pt-1 text-[11px] text-text-muted">
-            <div className="flex items-center gap-1.5">
-              <Building2 className="w-3 h-3 text-text-muted" />
-              <span>
-                {participant.city} • {participant.handle}
-              </span>
-            </div>
-            <span className="text-accent/90 font-semibold cursor-pointer hover:underline">
-              View Verified Proof ↗
-            </span>
+          <div className="text-[10px] text-text-muted">
+            {streak > 0 ? `${streak}d streak` : '0d streak'}
           </div>
         </div>
-      )}
+
+        {/* Small Up/Down Trend Indicator */}
+        <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0">
+          {isRising ? (
+            <ArrowUpRight className="w-3.5 h-3.5 text-accent" />
+          ) : isFalling ? (
+            <ArrowDownRight className="w-3.5 h-3.5 text-rose-400" />
+          ) : (
+            <Minus className="w-3.5 h-3.5 text-text-muted/60" />
+          )}
+        </div>
+      </div>
     </div>
   )
 }
