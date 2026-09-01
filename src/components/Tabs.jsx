@@ -1,37 +1,40 @@
 import React from 'react'
-import { Calendar, Flame } from 'lucide-react'
 
 /**
- * Tabs Component for switching between 'This Week' and 'All 30 Days'
+ * Tabs Component
+ * Controlled two-button pill toggle: "This Week" vs "All 30 Days"
+ * @param {Object} props
+ * @param {'week' | 'all'} props.activeTab - Active timeframe tab
+ * @param {function(string): void} props.onChange - Callback fired on tab select
  */
-export default function Tabs({ activeTab = 'weekly', onChangeTab = () => {} }) {
+export default function Tabs({ activeTab = 'week', onChange = () => {} }) {
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 my-3">
-      <div className="bg-surface-card border border-border p-1 rounded-card flex gap-1">
+    <div className="w-full max-w-4xl mx-auto px-3 sm:px-6 my-3">
+      <div className="bg-surface-card border border-border p-1.5 rounded-full flex items-center gap-1.5 shadow-inner">
+        {/* Tab 1: This Week */}
         <button
           type="button"
-          onClick={() => onChangeTab('weekly')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-card-sm text-sm font-bold transition-all duration-200 ${
-            activeTab === 'weekly'
+          onClick={() => onChange('week')}
+          className={`flex-1 py-2 sm:py-2.5 px-4 rounded-full text-xs sm:text-sm font-extrabold transition-all duration-200 text-center select-none ${
+            activeTab === 'week'
               ? 'bg-accent text-black shadow-sm'
-              : 'text-text-muted hover:text-text-primary hover:bg-surface-alt'
+              : 'text-text-muted hover:text-text-primary hover:bg-surface-alt/60'
           }`}
         >
-          <Flame className={`w-4 h-4 ${activeTab === 'weekly' ? 'text-black fill-black' : 'text-accent'}`} />
-          <span>This Week</span>
+          This Week
         </button>
 
+        {/* Tab 2: All 30 Days */}
         <button
           type="button"
-          onClick={() => onChangeTab('all30')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-card-sm text-sm font-bold transition-all duration-200 ${
-            activeTab === 'all30'
+          onClick={() => onChange('all')}
+          className={`flex-1 py-2 sm:py-2.5 px-4 rounded-full text-xs sm:text-sm font-extrabold transition-all duration-200 text-center select-none ${
+            activeTab === 'all'
               ? 'bg-accent text-black shadow-sm'
-              : 'text-text-muted hover:text-text-primary hover:bg-surface-alt'
+              : 'text-text-muted hover:text-text-primary hover:bg-surface-alt/60'
           }`}
         >
-          <Calendar className={`w-4 h-4 ${activeTab === 'all30' ? 'text-black' : 'text-text-muted'}`} />
-          <span>All 30 Days</span>
+          All 30 Days
         </button>
       </div>
     </div>

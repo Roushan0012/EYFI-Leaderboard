@@ -1,6 +1,10 @@
-import React, { useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import Header from './components/Header'
+import Tabs from './components/Tabs'
+import Toolbar from './components/Toolbar'
+import Podium from './components/Podium'
 import LeaderboardList from './components/LeaderboardList'
+import EmptyState from './components/EmptyState'
 import participantsData from './data/participants.json'
 import { getRankedParticipants, getChallengeStats } from './utils/rankData'
 
@@ -15,13 +19,19 @@ const FLOATING_RUPEES = [
 ]
 
 export default function App() {
-  // Hardcoded to 'week' for Step 2 as requested (tabs UI in Step 3)
-  const sortKey = 'week'
+  // Controlled interactive filter states
+  const [activeTab, setActiveTab] = useState('week') // 'week' | 'all'
+  const [search, setSearch] = useState('')
+  const [category, setCategory] = useState('all')
 
-  // Calculate sorted/ranked participants
+  // Calculate filtered, sorted, and ranked participants
   const rankedParticipants = useMemo(() => {
-    return getRankedParticipants(participantsData, { sortKey })
-  }, [sortKey])
+    return getRankedParticipants(participantsData, {
+      sortKey: activeTab,
+      search,
+      category,
+    })
+  }, [activeTab, search, category])
 
   // Calculate challenge stats for the Header
   const stats = useMemo(() => {
@@ -61,9 +71,27 @@ export default function App() {
           activeParticipants={1280}
         />
 
-        {/* Live Ranked Leaderboard (Podium + Participant List) */}
+        {/* Timeframe Toggle Tabs */}
+        <Tabs
+          activeTab={activeTab}
+          onChange={(tab) => setActiveTab(tab)}
+        />
+
+        {/* Search & Category Filter Toolbar */}
+        <Toolbar
+          searchValue={search}
+          onSearchChange={setSearch}
+          categoryValue={category}
+          onCategoryChange={setCategory}
+        />
+
+        {/* Interactive Leaderboard List or Empty State */}
         <div className="mt-2">
-          <LeaderboardList participants={rankedParticipants} />
+          {rankedParticipants.length === 0 ? (
+            <EmptyState />
+          ) : (
+            <LeaderboardList participants={rankedParticipants} />
+          )}
         </div>
       </main>
 
