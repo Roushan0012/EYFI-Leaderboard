@@ -15,7 +15,7 @@
   }
 }
 
-/* Custom scrollbar for horizontal categories or list */
+/* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -34,34 +34,54 @@
   background: #3A3A3A;
 }
 
-/* Floating Rupee Motif Container */
-.rupee-motif-container {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 0;
+/* Smooth expandable accordion transitions */
+.grid-transition {
+  display: grid;
+  transition: grid-template-rows 250ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.rupee-symbol {
-  position: absolute;
-  color: #CFFF3D;
-  opacity: 0;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 800;
-  user-select: none;
-  will-change: transform, opacity;
+.grid-transition-collapsed {
+  grid-template-rows: 0fr;
 }
 
-/* Glass & Card helper utilities */
-.card-flat {
-  background-color: #141414;
-  border: 1px solid #2A2A2A;
-  border-radius: 12px;
+.grid-transition-expanded {
+  grid-template-rows: 1fr;
 }
 
-.card-alt {
-  background-color: #1C1C1C;
-  border: 1px solid #2A2A2A;
-  border-radius: 12px;
+/* Global focus-visible outlines */
+:focus-visible {
+  outline: 2px solid #CFFF3D;
+  outline-offset: 2px;
+}
+
+/* Keyframe float with graceful reduction for reduced motion */
+@keyframes rupeeFloat {
+  0% {
+    transform: translateY(105vh) rotate(0deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.055;
+  }
+  88% {
+    opacity: 0.055;
+  }
+  100% {
+    transform: translateY(-12vh) rotate(20deg);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-float-slow {
+    animation: none !important;
+    opacity: 0.03 !important;
+    transform: none !important;
+  }
 }
